@@ -1,5 +1,6 @@
 pragma solidity ^0.5.0;
 
+import "./oracle.sol";
 import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/release-v2.5.0/contracts/token/ERC20/ERC20.sol";
 import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/release-v2.5.0/contracts/token/ERC20/ERC20Detailed.sol";
 
@@ -8,6 +9,7 @@ contract StrikeToken is ERC20, ERC20Detailed {
     using SafeMath for uint;
     
     address payable owner = msg.sender;
+    
     uint public exchangeRate = 1;
     
     //mapping(address => uint) balances;
