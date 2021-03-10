@@ -1,6 +1,7 @@
 pragma solidity ^0.5.0;
 
-import "@chainlink/contracts/src/v0.6/ChainlinkClient.sol";
+import "@chainlink/contracts/v0.5/ChainlinkClient.sol";
+
 
 contract APIConsumer is ChainlinkClient {
   
@@ -13,13 +14,13 @@ contract APIConsumer is ChainlinkClient {
     /**
      * Network: Kovan
      * Oracle: 0x2f90A6D021db21e1B2A077c5a37B3C7E75D15b7e
-     * Job ID: 29fa9aa13bf1468788b7cc4a500a45b8
+     * Job ID: 8f4eeda1a8724077a0560ee84eb006b4
      * Fee: 0.1 LINK
      */
     constructor() public {
         setPublicChainlinkToken();
         oracle = 0x2f90A6D021db21e1B2A077c5a37B3C7E75D15b7e;
-        jobId = "29fa9aa13bf1468788b7cc4a500a45b8";
+        jobId = "8f4eeda1a8724077a0560ee84eb006b4";
         fee = 0.1 * 10 ** 18; // 0.1 LINK
     }
     
