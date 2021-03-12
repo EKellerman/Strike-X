@@ -31,45 +31,50 @@ contract StrikeToken is ERC20, ERC20Detailed, usingProvable {
         owner = msg.sender;
     }
     
-    function currencyPrice() public payable {
+    function currencyPrice() internal {
         emit LogConstructorInitiated("Constructor was initiated. Call 'updatePrice()' to send the Provable Query.");
     }
 
-    function __ethusdCallback(bytes32 myid, uint ethusdResult) public {
+    function _ethusdCallback(bytes32 myid, uint ethusdResult) internal returns(uint){
         if (!validIds[myid]) revert();
         if (msg.sender != provable_cbAddress()) revert();
         ETHUSD = ethusdResult;
         emit LogPriceUpdated(ETHUSD);
         ethusdUpdatePrice();
+        return ETHUSD;
     }
     
-    function __ethcadCallback(bytes32 myid, uint ethcadResult) public {
+    function _ethcadCallback(bytes32 myid, uint ethcadResult) internal returns(uint) {
         if (!validIds[myid]) revert();
         if (msg.sender != provable_cbAddress()) revert();
         ETHCAD = ethcadResult;
         emit LogPriceUpdated(ETHCAD);
         ethcadUpdatePrice();
+        return ETHCAD;
     }
 
-    function ethusdUpdatePrice() payable  public {
+    function ethusdUpdatePrice() internal {
         if (provable_getPrice("URL") > address(this).balance) {
             emit LogNewProvableQuery("Provable query was NOT sent, please add some ETH to cover for the query fee");
         } 
         
         else {
             emit LogNewProvableQuery("Provable query was sent, standing by for the answer..");
-            provable_query(60, "URL", "json(https://api.pro.coinbase.com/products/ETH-USD/ticker).price");
+            // provable_query(60, "URL", "json(https://api.pro.coinbase.com/products/ETH-USD/ticker).price");
+            bytes32 queryId = provable_query(60, "URL", "json(https://api.pro.coinbase.com/products/ETH-USD/ticker).price");
+            validIds[queryId] = true;
         }
     }
     
-    function ethcadUpdatePrice() payable  public {
+    function ethcadUpdatePrice() internal {
         if (provable_getPrice("URL") > address(this).balance) {
             emit LogNewProvableQuery("Provable query was NOT sent, please add some ETH to cover for the query fee");
         } 
         
         else {
             emit LogNewProvableQuery("Provable query was sent, standing by for the answer..");
-            provable_query(60, "URL", "json(https://api.pro.coinbase.com/products/ETH-CAD/ticker).price");
+            bytes32 queryId = provable_query(60, "URL", "json(https://api.pro.coinbase.com/products/ETH-CAD/ticker).price");
+            validIds[queryId] = true;
         }
     }
     
@@ -78,12 +83,15 @@ contract StrikeToken is ERC20, ERC20Detailed, usingProvable {
     }
 
     function buy() payable public {
-        exchangeRate (msg.value);
-        // uint amountTobuy = msg.value;
-        require (msg.value > 0, "Purchase amount has to be more than zero");
-        _mint(msg.sender, msg.value);
+        ethusdUpdatePrice();
+        ethcadUpdatePrice();
+        bytes32 queryId = provable_query(60, "URL", "json(https://api.pro.coinbase.com/products/ETH-CAD/ticker).price");
+            validIds[queryId] = true;
+        uint amountTobuy = _ethusdCallback(queryId, msg.value) / _ethcadCallback(queryId, msg.value);
+        require (amountTobuy > 0, "Purchase amount has to be more than zero");
+        _mint(msg.sender, amountTobuy);
     
-        emit Bought(msg.value);
+        emit Bought(amountTobuy);
     }
     
     function withdraw(uint amount) internal{
